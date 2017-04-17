@@ -2,7 +2,7 @@
 Create tablespace vehicles_fleet
 DATAFILE 'vehicles_fleet1' size 300M,
          'vehicles_fleet2' size 100M
-AUTOEXTEND ON NEXT 10M MAXSIZE 500M
+AUTOEXTEND ON NEXT 10M MAXSIZE 1G
 EXTENT MANAGEMENT LOCAL
 SEGMENT SPACE MANAGEMENT AUTO
 ONLINE;
@@ -28,3 +28,45 @@ CREATE USER usuarionuevo
     DEFAULT TABLESPACE vehicles_fleet 
     QUOTA UNLIMITED ON vehicles_fleet 
     PASSWORD EXPIRE;
+
+--5
+grant create session to usuarionuevo;
+grant connect, resource to usuarionuevo;
+
+--6
+
+CREATE PROFILE manager_profile
+LIMIT SESSIONS_PER_USER 1
+IDLE_TIME             15
+FAILED_LOGIN_ATTEMPTS 4
+PASSWORD_LIFE_TIME 30;
+
+CREATE PROFILE finance_profile
+LIMIT SESSIONS_PER_USER 1
+IDLE_TIME             5
+FAILED_LOGIN_ATTEMPTS 2
+PASSWORD_LIFE_TIME 15;
+
+CREATE PROFILE service_profile
+LIMIT SESSIONS_PER_USER 1
+IDLE_TIME             10
+FAILED_LOGIN_ATTEMPTS 3
+PASSWORD_LIFE_TIME 20;
+
+CREATE PROFILE development
+LIMIT SESSIONS_PER_USER 2
+IDLE_TIME             30
+FAILED_LOGIN_ATTEMPTS UNLIMITED
+PASSWORD_LIFE_TIME 100;
+
+
+--7
+
+CREATE ROLE without_privileges
+IDENTIFIED BY contraseña;
+
+REVOKE ALL PRIVILEGES FROM without_privileges;
+
+
+
+
