@@ -67,6 +67,60 @@ IDENTIFIED BY contraseña;
 
 REVOKE ALL PRIVILEGES FROM without_privileges;
 
+--8
+
+CREATE USER usuario1
+    IDENTIFIED BY contraseña1 
+    DEFAULT TABLESPACE vehicles_fleet 
+    QUOTA UNLIMITED ON vehicles_fleet 
+    PROFILE manager_profile 
+    PASSWORD EXPIRE;
+
+CREATE USER usuario2
+    IDENTIFIED BY contraseña2
+    DEFAULT TABLESPACE vehicles_fleet 
+    QUOTA UNLIMITED ON vehicles_fleet 
+    PROFILE finance_profile 
+    PASSWORD EXPIRE;
+
+CREATE USER usuario3
+    IDENTIFIED BY contraseña3
+    DEFAULT TABLESPACE vehicles_fleet 
+    QUOTA UNLIMITED ON vehicles_fleet 
+    PROFILE service_profile 
+    PASSWORD EXPIRE;
+
+CREATE USER usuario4
+    IDENTIFIED BY contraseña4 
+    DEFAULT TABLESPACE vehicles_fleet 
+    QUOTA UNLIMITED ON vehicles_fleet 
+    PROFILE development 
+    PASSWORD EXPIRE;
+    
+-- si no se le asigna el perfil se puede usar
+--Alter user usuario4 profile development;
+
+--para asignar un rol
+--Grant nombreRol to usuario;
+
+create role conectarse;
+grant connect, resource to conectarse;
+
+grant conectarse to usuario1,usuario2,usuario3,usuario4;
+
+Grant without_privileges to usuario1,usuario2,usuario3;
+
+--9 
+
+alter user usuario1  ACCOUNT LOCK;
+alter user usuario2  ACCOUNT LOCK;
+alter user usuario3  ACCOUNT LOCK;
+
+--10
+DROP TABLESPACE test_purposes INCLUDING CONTENTS 
+AND DATAFILES CASCADE CONSTRAINTS;
+
+
 
 
 
