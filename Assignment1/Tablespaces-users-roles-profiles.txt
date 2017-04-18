@@ -116,6 +116,7 @@ alter user usuario1  ACCOUNT LOCK;
 alter user usuario2  ACCOUNT LOCK;
 alter user usuario3  ACCOUNT LOCK;
 
+-
 --10
 DROP TABLESPACE test_purposes INCLUDING CONTENTS 
 AND DATAFILES CASCADE CONSTRAINTS;
