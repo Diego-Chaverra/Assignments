@@ -1,20 +1,4 @@
-Create tablespace vehicles_fleet
-DATAFILE 'vehicles_fleet1' size 300M,
-         'vehicles_fleet2' size 100M
-AUTOEXTEND ON NEXT 10M MAXSIZE 1G
-EXTENT MANAGEMENT LOCAL
-SEGMENT SPACE MANAGEMENT AUTO
-ONLINE;
-
-
-CREATE TABLESPACE test_purposes
-DATAFILE 'test_purposes1' size 100M
-AUTOEXTEND ON NEXT 10M MAXSIZE 500M
-EXTENT MANAGEMENT LOCAL
-SEGMENT SPACE MANAGEMENT AUTO
-ONLINE;
-
-
+Punto 7----------
 CREATE OR REPLACE TRIGGER Mileage_Vehicle_Tr AFTER UPDATE 
 OF Mileage_Vehicle ON Vehicles FOR EACH ROW
 BEGIN
@@ -25,7 +9,7 @@ BEGIN
   End;
 END;
 
-
+Punto8----------
 CREATE OR REPLACE PROCEDURE Curren_Value  AS
   total_counts int;
   BEGIN
