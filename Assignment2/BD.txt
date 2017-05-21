@@ -1,0 +1,65 @@
+CREATE OR REPLACE VIEW  finance_profile AS
+	SELECT Vehicles.RegistrationNumber_Vehicle, Vehicles.Mileage_Vehicle, Vehicles.Model_Vehicle, Vehicles.CurrentValue_Vehicle, 
+	Types_of_Vehicles.Description_Vehicle AS CLASS, Vehicles.ReplacementValue_Vehicle, Vehicles.Status_Vehicle,
+	Types_of_Vehicles.Special_Qualification_Vehicle AS Required_special_qualification, 
+	(SELECT COUNT(1) FROM Services WHERE ID_Vehicle = Vehicles.ID_Vehicle) AS Number_of_services,
+	(SELECT SUM(AMOUNT) FROM Repair_Costs WHERE ID_Vehicle = Vehicles.ID_Vehicle) AS Total_money_spent_in_repairs
+	FROM Vehicles
+	JOIN Types_of_Vehicles
+	ON Types_of_Vehicles.ID_Type_of_Vehicle = Vehicles.ID_Types_of_Vehicle
+	WHERE Types_of_Vehicles.Description_Vehicle IN ('Car', 'Light rigid heavy vehicle', 'Medium rigid heavy vehicle', 'Heavy rigid vehicle', 'Tractor') 
+	AND TO_CHAR(Vehicles.BoughtDate_Vehicle, 'YYYY') >= (TO_CHAR(SYSDATE, 'YYYY') - 2)
+	ORDER BY Vehicles.Mileage_Vehicle DESC;
+		
+GRANT SELECT ON finance_profile to USER2; 
+
+
+CREATE OR REPLACE FUNCTION Name_Service(ID_Vehicle IN NUMBER)
+RETURN VARCHAR IS
+   Exist NUMBER(1) := 0, Response VARCHAR(200) := '', Mileage VARCHAR(200) := '';
+BEGIN
+    SELECT TRUNC(Mileage_Vehicle/3000)*3000 INTO Mileage 
+    FROM Vehicles WHERE ID_Vehicle = ID_Vehicle;
+    
+    SELECT COUNT(*) INTO Exist FROM Services WHERE Name_Service = (Mileage || '_Service');
+    
+    IF Exist > 1
+    THEN
+      DBMS_OUTPUT.PUT_LINE('Empty');
+      RETURN Response;
+    END IF;
+    
+    SELECT Mileage || '_Service' INTO Response FROM DUAL;
+    RETURN Response;
+END;  
+
+SELECT Name_Service(1) FROM DUAL;
+
+	
+CREATE OR REPLACE PROCEDURE SERVICES_VEHICLE(ID_VEHICLE IN Vehicles.ID_Vehicle%TYPE) AS
+	Mileage_S VARCHAR(20) := '', Mileage_Vehi Vehicles.Mileage_Vehicle%TYPE;
+	Status_Service VARCHAR(20) := 'Pending', Status_ServiceD VARCHAR(20) := 'Pending';
+	description VARCHAR2(100) := '';
+BEGIN
+
+	Mileage_S := ASSIGN_SERVICE(ID_VEHICLE);
+	
+	DBMS_OUTPUT.PUT_LINE('La Función: ' || Mileage_S);
+  
+	IF Mileage_S IS NOT NULL THEN
+		SELECT MILEAGE INTO Mileage_Vehi FROM Vehicles WHERE ID_Vehicle = ID_VEHICLE;
+		
+		description := 'Mandatory ' || Mileage_S || ' Aervice Current Mileage ' || Mileage_Vehi;
+		
+		INSERT INTO Services (ID_Vehicle,Name_Service,IssueDate_Service,Description_Service,Status_Service) 
+			VALUES (ID_VEHICLE, description, SYSDATE, NULL, Status_Service);
+		
+		FOR Type_Service IN (SELECT * FROM Types_of_Service)
+		LOOP
+			INSERT INTO Service_Details (ID_Service,Type_of_Service,Status_ServiceD) 
+				VALUES (Service_Details_Sequence.CURRVAL, Type_Service.ID_Type_of_Service, Status_ServiceD);
+	    END LOOP;
+		
+	END IF;
+ 
+END;
