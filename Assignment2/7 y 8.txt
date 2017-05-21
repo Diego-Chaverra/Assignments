@@ -1,0 +1,57 @@
+Create tablespace vehicles_fleet
+DATAFILE 'vehicles_fleet1' size 300M,
+         'vehicles_fleet2' size 100M
+AUTOEXTEND ON NEXT 10M MAXSIZE 1G
+EXTENT MANAGEMENT LOCAL
+SEGMENT SPACE MANAGEMENT AUTO
+ONLINE;
+
+
+CREATE TABLESPACE test_purposes
+DATAFILE 'test_purposes1' size 100M
+AUTOEXTEND ON NEXT 10M MAXSIZE 500M
+EXTENT MANAGEMENT LOCAL
+SEGMENT SPACE MANAGEMENT AUTO
+ONLINE;
+
+
+CREATE OR REPLACE TRIGGER Mileage_Vehicle_Tr AFTER UPDATE 
+OF Mileage_Vehicle ON Vehicles FOR EACH ROW
+BEGIN
+  SET SERVEROUTPUT ON
+  ACCEPT Id_Vehicle PROMPT 'Introdusca el ID del Vehiculo'
+  Begin
+    Exec SERVICES_VEHICLE('&Id_Vehicle');
+  End;
+END;
+
+
+CREATE OR REPLACE PROCEDURE Curren_Value  AS
+  total_counts int;
+  BEGIN
+    UPDATE(Select (V.CurrentValue_Vehicle-(V.CurrentValue_Vehicle*0.02)) Current_Value  From Types_of_Vehicle T 
+    Inner join Vehicles V On T.ID_Type_of_Vehicle=V.ID_Type_of_Vehicle )Set V.CurrentValue_Vehicle = Current_Value
+    Where T.Description_Vehicle ='Moped' or T.Description_Vehicle ='Motorcycle' or T.Description_Vehicle ='Trike motorcycle';
+    IF SQL%FOUND THEN
+      total_counts := SQL%ROWCOUNT;
+    ELSE
+      DBMS_OUTPUT.PUT_LINE('CAN´T UPDADE THE CURRENT VALUE THE NEXT TYPES VEHICLES: Moped, Motorcycle and Trike motorcycle');
+    END IF;
+    UPDATE(Select (V.CurrentValue_Vehicle-(V.CurrentValue_Vehicle*0.03)) Current_Value  From Types_of_Vehicle T 
+    Inner join Vehicles V On T.ID_Type_of_Vehicle=V.ID_Type_of_Vehicle )Set V.CurrentValue_Vehicle = Current_Value
+    Where T.Description_Vehicle ='Car' or T.Description_Vehicle ='Light rigid heavy vehicle' or T.Description_Vehicle ='Medium rigid heavy vehicle';
+    IF SQL%FOUND THEN
+      total_counts := SQL%ROWCOUNT + total_counts;
+    ELSE
+      DBMS_OUTPUT.PUT_LINE('CAN´T UPDADE THE CURRENT VALUES OF NEXT VEHICLES: Car, Light rigid heavy vehicle, Medium rigid heavy vehicle');
+    END IF;
+    UPDATE(Select (V.CurrentValue_Vehicle-(V.CurrentValue_Vehicle*0.03)) Current_Value  From Types_of_Vehicle T 
+    Inner join Vehicles V On T.ID_Type_of_Vehicle=V.ID_Type_of_Vehicle )Set V.CurrentValue_Vehicle = Current_Value
+    Where T.Description_Vehicle NOT IN ('Trike motorcycle','Motorcycle','Moped','Car','Light rigid heavy vehicle','Medium rigid heavy vehicle');
+    IF SQL%FOUND THEN
+      total_counts := SQL%ROWCOUNT + total_counts;
+    ELSE
+      DBMS_OUTPUT.PUT_LINE('CAN´T UPDADE THE CURRENT VALUES OF OTHERS VEHICLES');
+    END IF;
+    DBMS_OUTPUT.PUT_LINE('Number Vehicles Updated Successfully : ' || total_counts);
+  END;
