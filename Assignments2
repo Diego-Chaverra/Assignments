@@ -1,0 +1,455 @@
+CREATE TABLE Drivers 
+(
+    ID_Driver NUMBER NOT NULL,
+    Employee_NUMBER NUMBER(15) NOT NULL,
+    FullName_Driver VARCHAR(255) NOT NULL,
+    
+	CONSTRAINT PK_Driver PRIMARY KEY (ID_Driver)
+);
+
+CREATE SEQUENCE Drivers_Sequence START WITH 1 INCREMENT BY 1;
+
+CREATE TRIGGER Drivers_Trigger BEFORE INSERT ON Drivers FOR EACH ROW
+BEGIN
+  SELECT Drivers_Sequence.NEXTVAL 
+  INTO :new.ID_Driver
+  FROM dual;
+END;
+
+
+CREATE TABLE Types_of_Vehicle
+(
+    ID_Type_of_Vehicle NUMBER NOT NULL,
+    Description_Vehicle VARCHAR(30) NOT NULL,
+	Special_Qualification_Vehicle VARCHAR(1) NOT NULL,
+    
+	CONSTRAINT PK_Types_of_Vehicle PRIMARY KEY (ID_Type_of_Vehicle),
+	CONSTRAINT CK_Special_Qualification_Vehicle CHECK (Special_Qualification_Vehicle in ('S', 'N'))
+);
+
+CREATE SEQUENCE Types_of_Vehicle_Sequence START WITH 1 INCREMENT BY 1;
+  
+CREATE OR REPLACE TRIGGER Types_of_Vehicle_Trigger BEFORE INSERT ON Types_of_Vehicle FOR EACH ROW
+BEGIN
+  SELECT Types_of_Vehicle_Sequence.NEXTVAL 
+  INTO :new.ID_Types_of_Vehicle
+  FROM dual;
+END;
+
+
+CREATE TABLE Vehicles 
+(
+    ID_Vehicle NUMBER NOT NULL,
+    RegistratioNUMBER_Vehicle NUMBER(15) NOT NULL,
+    Plate_Vehicle VARCHAR(7) NOT NULL,
+	Status_Vehicle VARCHAR(10) NOT NULL,
+	Mileage_Vehicle NUMBER NOT NULL,
+	Model_Vehicle NUMBER NOT NULL,
+	CurrentValue_Vehicle NUMBER,
+	ReplacementValue_Vehicle NUMBER,
+	TaxedDate_Vehicle date,
+	BoughtDate_Vehicle date,
+	ActualPolicyNUMBER_Vehicle NUMBER,
+	WrittenOff_Vehicle VARCHAR(1) NOT NULL,
+	ID_Types_of_Vehicle NUMBER NOT NULL,
+	CONSTRAINT PK_Vehicles PRIMARY KEY (ID_Vehicle),
+	CONSTRAINT FK_Vehicle_type FOREIGN KEY (ID_Type_of_Vehicle) references Types_of_Vehicle(ID_Type_of_Vehicle),
+	CONSTRAINT CK_Status_Vehicle CHECK (Status_Vehicle in ('Active', 'Inactive', 'Repairing', 'Sold')),
+	CONSTRAINT CK_WrittenOff_Vehicle CHECK (WrittenOff_Vehicle in ('S', 'N'))
+);
+
+CREATE SEQUENCE Vehicles_Secuence START WITH 1 INCREMENT BY 1;
+  
+CREATE OR REPLACE TRIGGER Vehicles_Trigger BEFORE INSERT ON Vehicles FOR EACH ROW
+BEGIN
+  SELECT Vehicles_Secuence.NEXTVAL 
+  INTO :new.ID_Vehicle
+  FROM dual;
+END;
+
+CREATE TABLE Vehicles_X_Drivers 
+(
+    ID_Driver NUMBER NOT NULL,
+    ID_Vehicle NUMBER NOT NULL,
+	CONSTRAINT PK_Vehicles_X_Drivers PRIMARY KEY (ID_Driver, ID_Vehicle),
+	CONSTRAINT FK_Vehicles_X_Drivers_Driver FOREIGN KEY (ID_Driver) references Vehicles(ID_Vehicle),
+	CONSTRAINT FK_Vehicles_X_Drivers_Vehicle FOREIGN KEY (ID_Vehicle) references Drivers(ID_Driver)
+);
+
+
+CREATE TABLE Drivers_Qualifications 
+(
+    ID_Driver NUMBER NOT NULL,
+    Type_of_Vehicle NUMBER NOT NULL,
+	Status_Driver VARCHAR(15) NOT NULL,
+	AssignmentDate_Driver date NOT NULL,
+	CONSTRAINT PK_Drivers_Qualifications PRIMARY KEY (ID_Driver, Type_of_Vehicle),
+	CONSTRAINT FK_Qualification_Driver FOREIGN KEY (ID_Driver) references Drivers(ID_Driver),
+	CONSTRAINT FK_Qualification_Type_of_Vehicle FOREIGN KEY (Type_of_Vehicle) references Type_of_Vehicle(ID_Type_of_Vehicle),
+	CONSTRAINT CK_status_qualification CHECK (Status_Driver in ('Active', 'Inactive', 'Expired', 'Disqualified'))
+);
+
+CREATE TABLE Repair_Costs 
+(
+    ID_Repair NUMBER NOT NULL,
+    ID_Vehicle NUMBER NOT NULL,
+	Date_Repair date NOT NULL,
+	Description_Repair VARCHAR(100),
+	Amount_Repair NUMBER(19,4) NOT NULL,
+	Status_Repair VARCHAR(10) NOT NULL,	
+	CONSTRAINT PK_Repair_Costs PRIMARY KEY (ID_Repair),
+	CONSTRAINT FK_Repair_Vehicle FOREIGN KEY (ID_Vehicle) references Vehicles(ID_Vehicle),
+	CONSTRAINT CK_Repair_Status CHECK (Status_Repair in ('Pending', 'Paid'))
+);
+
+CREATE SEQUENCE Repair_Costs_Sequence START WITH 1 INCREMENT BY 1;
+
+CREATE OR REPLACE TRIGGER Repair_Costs_Trigger BEFORE INSERT ON Repair_Costs FOR EACH ROW
+BEGIN
+  SELECT Repair_Costs_Sequence.NEXTVAL 
+  INTO :new.ID_Repair
+  FROM dual;
+END;
+
+CREATE TABLE Insurance_Claims 
+(
+    ID_Insurance NUMBER NOT NULL,
+    ID_Vehicle NUMBER NOT NULL,
+	PolicyNUMBER_Insurance NUMBER NOT NULL,
+	LossDate_Insurance date NOT NULL,
+	Date_of_Issue_Insurance date NOT NULL,
+	Nature_of_Payment_Insurance VARCHAR(100),
+	Damages_Insurance VARCHAR(500),
+	CONSTRAINT PK_Insurance_Claims PRIMARY KEY (ID_Insurance),
+	CONSTRAINT FK_Insurance_Vehicle FOREIGN KEY (ID_Vehicle) references Vehicles(ID_Vehicle)
+);
+
+
+CREATE SEQUENCE Insurance_Claims_Sequence START WITH 1 INCREMENT BY 1;
+  
+CREATE OR REPLACE TRIGGER Insurance_Claims_Trigger BEFORE INSERT ON Insurance_Claims FOR EACH ROW
+BEGIN
+  SELECT Insurance_Claims_Sequence.NEXTVAL 
+  INTO :new.ID_Insurance
+  FROM dual;
+END;
+
+
+CREATE TABLE Services 
+(
+    ID_Service NUMBER NOT NULL,
+    ID_Vehicle NUMBER NOT NULL,
+	Name_Service VARCHAR(50) NOT NULL,
+	IssueDate_Service date NOT NULL,
+	Description_Service VARCHAR(100),
+	Status_Service VARCHAR(30) NOT NULL,	
+	CONSTRAINT PK_Services PRIMARY KEY (ID_Service),
+	CONSTRAINT FK_Service_Vehicle FOREIGN KEY (ID_Vehicle) references Vehicles(ID_Vehicle),
+	CONSTRAINT CK_Service_Status CHECK (Status_Service in ('Pending', 'Scheduled', 'Ok'))
+);
+
+CREATE SEQUENCE Services_Sequence START WITH 1 INCREMENT BY 1;
+  
+
+CREATE OR REPLACE TRIGGER Services_Trigger BEFORE INSERT ON Services FOR EACH ROW
+BEGIN
+  SELECT Services_Sequence.NEXTVAL 
+  INTO :new.ID_Service
+  FROM dual;
+END;
+
+
+CREATE TABLE Types_of_Service 
+(
+    ID_Type_of_Service NUMBER NOT NULL,
+    Description_Types_of_Service VARCHAR(100) NOT NULL,
+	CONSTRAINT PK_Types_of_Service PRIMARY KEY (ID_Type_of_Service)
+);
+
+CREATE SEQUENCE Types_of_Service_Sequence START WITH 1 INCREMENT BY 1;
+
+
+CREATE OR REPLACE TRIGGER Types_of_Service_Trigger BEFORE INSERT ON Types_of_Service FOR EACH ROW
+BEGIN
+  SELECT Types_of_Service_Sequence.NEXTVAL 
+  INTO :new.ID_Type_of_Service
+  FROM dual;
+END;
+
+CREATE TABLE Service_Details 
+(
+    ID_ServiceDetail NUMBER NOT NULL,
+    ID_Service NUMBER NOT NULL,
+	Type_of_Service NUMBER NOT NULL,
+	Status_ServiceD VARCHAR(15) NOT NULL,	
+	CONSTRAINT PK_Service_Details PRIMARY KEY (ID_ServiceDetail),
+	CONSTRAINT FK_Service FOREIGN KEY (ID_Service) references Services(ID_Service),
+	CONSTRAINT FK_Type_of_Service FOREIGN KEY (Type_of_Service) references Types_of_Service(ID_Type_of_Service),
+	CONSTRAINT CK_Status_Service CHECK (Status_ServiceD in ('Ok', 'Pending', 'Needs Repair', 'Observations'))
+);
+ 
+CREATE SEQUENCE Service_Details_Sequence START WITH 1 INCREMENT BY 1;
+    
+CREATE OR REPLACE TRIGGER Service_Details_Trigger BEFORE INSERT ON Service_Details FOR EACH ROW
+BEGIN
+  SELECT Service_Details_Sequence.NEXTVAL 
+  INTO :new.ID_ServiceDetail
+  FROM dual;
+END;
+
+
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1293112991','Cristian Dean');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1481030365','Johan Dennis');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1521090318','Daniel Rose');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1699112383','Fernando Mcmahon');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1717112348','Carlos Bradley');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1898111527','David Long');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1939022818','Julian Young');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1094052074','Sebastian Gutierrez');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1160022463','Charles Cox');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1195033074','Yairo Burke');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1108023066','Dairo Garrison');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1282102676','Andres Silva');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1252060265','Edwin Miranda');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1268027346','Willian Vega');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1299742616','Mauricio Cochran');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1207111269','Santiago Peck');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1217070502','Diego Byrd');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1236052121','Yair Craig');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1257101297','Dennis Estrada');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1331120293','Alberto Callahan');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1357040721','Alez Bright');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1537111450','Amador Leon');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1607038342','Antonio West');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1668048161','Sergio Powell');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1634831754','Brayan Gutierrez');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1644101677','Claudio Rivas');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1647821719','Cirilo Mckee');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1674121948','Casemiro Wise');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1777011990','Luka Chen');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1777050285','Cristiano Albert');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1784031267','Leo Wiley');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1740251322','Neymar Love');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1790272649','Suarez Oliver');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1743271257','Ivan Grimes');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1827012684','Rooney Carney');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1831372552','Javier Abbott');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1861332999','Gerrard Velasquez');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1898372001','Daniel Nieves');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1983015930','Marcelo Acosta');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1943115764','James Higgins');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1938025320','Francisco Villarreal');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1927015703','Asencio Pacheco');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1965015849','Orlando Bartlett');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1962115127','Alejandro Francis');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1985095698','Camilo Cobb');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1418055167','Macnelly Morrow');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1442023034','Brandon Patel');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1400010579','Rafael Cox');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1427082705','Miguel Dunlap');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1441100853','Jonas Mccray');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1449012970','Angel Hudson');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1475010943','Marlon Sullivan');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1579119972','Alexis Booker');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1519120935','Davinson Nash');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1576070948','Alexander Burton');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1574060905','Juan Crawford');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1538020951','Fernando Dominguez');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1570060904','Didier Richards');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1569071938','Mayer Hendrix');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1526051905','Oscar Dalton');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1126092449','Franco Pitts');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1100112484','Arley Coffey');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1107021308','Pablo Davis');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1189112309','Elkin Vazquez');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1193071387','Fidel Montgomery');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1120052393','Carlos Whitfield');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1139080399','Fabio Garrett');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1534024085','Leon Frye');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1507115165','Platon Tillman');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1597085404','Charles Delgado');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1568025004','Esteven Cohen');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1518065603','Julian Robertson');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1565125283','Darwin Dalton');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1523041206','Bladimir Ryan');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1516050182','Jose Short');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1534032239','Danilo Sanford');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1569092452','Daniel Palmer');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1569110812','Esteban Estrada');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1562012850','Nairo Burnett');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1503111351','Rigoberto Adkins');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1826030899','Jackson Daniels');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1814062730','Luis Sims');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1846071944','Aldo Hill');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1894011495','Leao Bush');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1829070870','Edwin Palmer');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1839062859','Alberto Gibbs');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1631102809','Duvan West');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1666121995','Yeison Maynard');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1631060101','Yerry Casey');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1696012067','Pablo Reilly');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1627060110','Cristian Fields');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1634092422','Diego Ray');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1609072771','Frank Winters');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1644080710','Santiago Kemp');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1666050304','Sebastian Yang');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1667040672','Zamir Mccarty');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1653080229','Yoel Stout');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1641032448','Julian Mcleod');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1648081360','Telmo Black');
+INSERT INTO Drivers (EmployeeNumber_Driver,FullName_Driver) VALUES ('1633092514','David Johnston');
+
+INSERT INTO Types_of_Vehicles (Description_Vehicle,Special_Qualification_Vehicle) VALUES ('Moped','N');
+INSERT INTO Types_of_Vehicles (Description_Vehicle,Special_Qualification_Vehicle) VALUES ('Motorcycle','N');
+INSERT INTO Types_of_Vehicles (Description_Vehicle,Special_Qualification_Vehicle) VALUES ('Trike motorcycle','S');
+INSERT INTO Types_of_Vehicles (Description_Vehicle,Special_Qualification_Vehicle) VALUES ('Car','S');
+INSERT INTO Types_of_Vehicles (Description_Vehicle,Special_Qualification_Vehicle) VALUES ('Light rigid heavy vehicle','S');
+INSERT INTO Types_of_Vehicles (Description_Vehicle,Special_Qualification_Vehicle) VALUES ('Medium rigid heavy vehicle','S');
+INSERT INTO Types_of_Vehicles (Description_Vehicle,Special_Qualification_Vehicle) VALUES ('Heavy rigid vehicle','S');
+INSERT INTO Types_of_Vehicles (Description_Vehicle,Special_Qualification_Vehicle) VALUES ('Tractor','N');
+INSERT INTO Types_of_Vehicles (Description_Vehicle,Special_Qualification_Vehicle) VALUES ('Wheelchair vehicle','S');
+
+
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('4412512','VBC123','Active','24500','2011','1000000','1500000',sysdate,sysdate,'446655885','N','1');---------------------
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('31210512','AFC753','Active','41500','2016','4000000','900000',sysdate,sysdate,'446444885','N','2');		
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('5451412','ABT456','Active','7500','2012','3000000','800000',sysdate,sysdate,'410655885','N','3');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('45544512','AYC789','Inactive','38500','2010','2000000','700000',sysdate,sysdate,'776655885','N','4');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('5243354','AYC224','Sold','1500','2011','2002000','1000000',sysdate,sysdate,'886655885','N','5');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('445225412','XXU123','Active','100','2017','3000000','400000',sysdate,sysdate,'446655445','N','6');		
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('45422352','ZAY123','Active','5300','2015','800000','600000',sysdate,sysdate,'444654775','S','7');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('665777','CSD123','Active','4573','2015','400000','700000',sysdate,sysdate,'104255885','N','8');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('45578775','SWA123','Sold','6635','2016','700000','800000',sysdate,sysdate,'201455885','N','9');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('56453345','FQF123','Active','53665','2013','1200000','1200000',sysdate,sysdate,'201755885','N','9');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('7757545','YQQ123','Active','7588','2014','1200000','1300000',sysdate,sysdate,'201054485','N','8');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('78752412','GGG123','Active','7896','2014','1300000','1300000',sysdate,sysdate,'446654258','N','7');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('35875454','VKV123','Sold','1263','2015','1400000','1300000',sysdate,sysdate,'146654477','S','6');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('86424556','LLM128','Active','1200','2015','1500000','1400000',sysdate,sysdate,'246622825','N','5');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('56454242','IIQ128','Active','1474','2015','1600000','1400000',sysdate,sysdate,'336655335','N','4');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('27282872','GHT124','Active','1598','2017','1700000','1000000',sysdate,sysdate,'776657785','N','3');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('33636389','NBP188','Inactive','12450','2016','500000','1000000',sysdate,sysdate,'996655899','S','2');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('74542420','CVL127','Active','15000','2015','450000','1000000',sysdate,sysdate,'336655833','N','1');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('10444450','ERD124','Active','12555','2014','1200000','1300000',sysdate,sysdate,'386655838','N','1');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('45400004','YTL173','Active','17000','2013','1300000','1200000',sysdate,sysdate,'436655839','N','2');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('40404058','IUP153','Active','18050','2011','1400000','1100000',sysdate,sysdate,'446655400','S','3');
+INSERT INTO Vehicles (RegistrationNumber_Vehicle,Plate_Vehicle,Status_Vehicle,Mileage_Vehicle,Model_Vehicle,CurrentValue_Vehicle,ReplacementValue_Vehicle,
+	TaxedDate_Vehicle,BoughtDate_Vehicle,ActualPolicyNumber_Vehicle,WrittenOff_Vehicle,ID_Types_of_Vehicle) 
+		VALUES ('7721400','IQA523','Active','14500','2012','1500000','4400000',sysdate,sysdate,'400655885','N','4');
+
+
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Automatic Transmission Fluid');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Battery and Cables');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Belts');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Brakes');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Cabin Air Filter');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Chassis Lubrication');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Dashboard Indicator Light On');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Coolant (Antifreeze)');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Engine Air Filter');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Engine Oil');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Exhaust');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Hoses');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Lights');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Power Steering Fluid');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Steering and Suspension');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Tire Inflation and Condition');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Wheel Alignment');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Windshield Washer Fluid');
+INSERT INTO Types_of_Service (Description_Types_of_Service) VALUES ('Wiper Blades');
+
+
+INSERT INTO Insurance_Claims (ID_Vehicle,PolicyNumber_Insurance,LossDate_Insurance,Date_of_Issue_Insurance,Nature_of_Payment_Insurance,Damages_Insurance) 
+	VALUES ('1','434777',sysdate,sysdate,'Credit card','Stop, wheels');
+INSERT INTO Insurance_Claims (ID_Vehicle,PolicyNumber_Insurance,LossDate_Insurance,Date_of_Issue_Insurance,Nature_of_Payment_Insurance,Damages_Insurance) 
+	VALUES ('2','456778',sysdate,sysdate,'Credit card','Stop, wheels');
+INSERT INTO Insurance_Claims (ID_Vehicle,PolicyNumber_Insurance,LossDate_Insurance,Date_of_Issue_Insurance,Nature_of_Payment_Insurance,Damages_Insurance) 
+	VALUES ('3','456454',sysdate,sysdate,'Credit card','Wheels and paint');
+INSERT INTO Insurance_Claims (ID_Vehicle,PolicyNumber_Insurance,LossDate_Insurance,Date_of_Issue_Insurance,Nature_of_Payment_Insurance,Damages_Insurance) 
+	VALUES ('1','446785',sysdate,sysdate,'Credit card','Wheels');
+INSERT INTO Insurance_Claims (ID_Vehicle,PolicyNumber_Insurance,LossDate_Insurance,Date_of_Issue_Insurance,Nature_of_Payment_Insurance,Damages_Insurance) 
+	VALUES ('1','447769',sysdate,sysdate,'Credit card','Stop');
+INSERT INTO Insurance_Claims (ID_Vehicle,PolicyNumber_Insurance,LossDate_Insurance,Date_of_Issue_Insurance,Nature_of_Payment_Insurance,Damages_Insurance) 
+	VALUES ('4','445569',sysdate,sysdate,'Credit card','Stop, wheels');
+INSERT INTO Insurance_Claims (ID_Vehicle,PolicyNumber_Insurance,LossDate_Insurance,Date_of_Issue_Insurance,Nature_of_Payment_Insurance,Damages_Insurance) 
+	VALUES ('15','422125',sysdate,sysdate,'Credit card','Stop, wheels');
+INSERT INTO Insurance_Claims (ID_Vehicle,PolicyNumber_Insurance,LossDate_Insurance,Date_of_Issue_Insurance,Nature_of_Payment_Insurance,Damages_Insurance) 
+	VALUES ('17','444440',sysdate,sysdate,'Credit card','Lights');
+INSERT INTO Insurance_Claims (ID_Vehicle,PolicyNumber_Insurance,LossDate_Insurance,Date_of_Issue_Insurance,Nature_of_Payment_Insurance,Damages_Insurance) 
+	VALUES ('20','441230',sysdate,sysdate,'Credit card','Stop, wheels');
+INSERT INTO Insurance_Claims (ID_Vehicle,PolicyNumber_Insurance,LossDate_Insurance,Date_of_Issue_Insurance,Nature_of_Payment_Insurance,Damages_Insurance) 
+	VALUES ('3','445104',sysdate,sysdate,'Credit card','Paint');
+	
+
+INSERT INTO Repair_Costs (ID_Vehicle,Date_Repair,Description_Repair,Amount_Repair,Status_Repair) 
+	VALUES ('1',sysdate,'Working on it','7405','Pending');
+INSERT INTO Repair_Costs (ID_Vehicle,Date_Repair,Description_Repair,Amount_Repair,Status_Repair) 
+	VALUES ('2',sysdate,'Working on it','12500','Pending');
+INSERT INTO Repair_Costs (ID_Vehicle,Date_Repair,Description_Repair,Amount_Repair,Status_Repair) 
+	VALUES ('2',sysdate,'Working on it','15555','Paid');
+INSERT INTO Repair_Costs (ID_Vehicle,Date_Repair,Description_Repair,Amount_Repair,Status_Repair) 
+	VALUES ('15',sysdate,'Working on it','20000','Paid');
+
+
+INSERT INTO Services (ID_Vehicle,Name_Service,IssueDate_Service,Description_Service,Status_Service) 
+	VALUES ('3','Mandatory 9000_service service; current mileage 9123',sysdate,'','Pending');
+INSERT INTO Services (ID_Vehicle,Name_Service,IssueDate_Service,Description_Service,Status_Service) 
+	VALUES ('20','Mandatory 3000_service service; current mileage 3500',sysdate,'','Pending');
+INSERT INTO Services (ID_Vehicle,Name_Service,IssueDate_Service,Description_Service,Status_Service) 
+	VALUES ('17','Mandatory 3000_service service; current mileage 3804',sysdate,'','Ok');
+INSERT INTO Services (ID_Vehicle,Name_Service,IssueDate_Service,Description_Service,Status_Service) 
+	VALUES ('2','Mandatory 6000_service service; current mileage 7588',sysdate,'','Scheduled');
+INSERT INTO Services (ID_Vehicle,Name_Service,IssueDate_Service,Description_Service,Status_Service) 
+	VALUES ('10','Mandatory 3000_service service; current mileage 3250',sysdate,'','Scheduled');
+
+
+INSERT INTO Service_Details (ID_Service,Type_of_Service,Status_ServiceD) VALUES ('1','1','Pending');
+INSERT INTO Service_Details (ID_Service,Type_of_Service,Status_ServiceD) VALUES ('1','9','Observations');
+INSERT INTO Service_Details (ID_Service,Type_of_Service,Status_ServiceD) VALUES ('2','4','Observations');
+INSERT INTO Service_Details (ID_Service,Type_of_Service,Status_ServiceD) VALUES ('3','3','Ok');
+INSERT INTO Service_Details (ID_Service,Type_of_Service,Status_ServiceD) VALUES ('3','9','Needs Repair');
+INSERT INTO Service_Details (ID_Service,Type_of_Service,Status_ServiceD) VALUES ('3','5','Observations');
+INSERT INTO Service_Details (ID_Service,Type_of_Service,Status_ServiceD) VALUES ('4','3','Ok');
+INSERT INTO Service_Details (ID_Service,Type_of_Service,Status_ServiceD) VALUES ('4','8','Pending');
+INSERT INTO Service_Details (ID_Service,Type_of_Service,Status_ServiceD) VALUES ('5','2','Ok');
+INSERT INTO Service_Details (ID_Service,Type_of_Service,Status_ServiceD) VALUES ('5','4','Pending');
